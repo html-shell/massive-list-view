@@ -3,21 +3,24 @@
 <div class='MassiveListView'>
   <div class='ScrollArea DisplayColumn'>
     <div class='Top' ></div>
-    <div class='ItemA'>
-    </div>
-    <div class='ItemB'>
-    </div>
-    <div class='ItemC'>
-    </div>
     <div flex="1"></div>
   </div>
 </div>
-<script src="../javascripts/size-balanced-tree.js"></script>
 
-<!--script type="application/javascript;version=1.8"-->
+<script src="../javascripts/size-balanced-tree.js"></script>
 
 <script >
 'use strict'
+
+window.Nil.value = {
+  rowHeight: 0,
+  rowTotalHeight: 0
+}
+let oldNodeUpdateSize = window.Node.prototype.updateSize
+window.Node.prototype.updateSize = function() {
+  oldNodeUpdateSize.call(this)
+  this.value.rowTotalHeight = this.left.value.rowTotalHeight + this.right.value.rowTotalHeight + this.value.rowHeight
+}
 
 /**
  * Returns a random integer between min (inclusive) and max (inclusive)
@@ -27,23 +30,51 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-let array = []
-let totalHeight = 0
-for (let i = 0; i < 1000000; ++i) {
+window.SBTree.prototype.findRowForScrollTop = function (scrollTop) {
+  if (scrollTop >= this.root.value.rowTotalHeight) {
+    scrollTop = this.root.value.rowTotalHeight - 1
+  }
+  if (scrollTop < 0) {
+    scrollTop = 0
+  }
+  let node = this.root;
+  if (node !== window.Nil) {
+    while (true) {
+      if (node.left.value.rowTotalHeight > scrollTop) {
+        node = node.left
+      } else {
+        scrollTop -= node.left.value.rowTotalHeight
+        if (scrollTop < node.value.rowHeight) {
+          break
+        }
+        scrollTop -= node.value.rowHeight
+        node = node.right
+      }
+    }
+  }
+  return this.getIndex(node)
+}
+
+let tree = new window.SBTree()
+
+const startTime = Date.now()
+for (let i = 0; i < 10000; ++i) {
   const newItem = {
-    height:getRandomInt(10, 30),
+    rowHeight:getRandomInt(1, 1),
     data: i
   }
-  totalHeight += newItem.height
-  array.push(newItem)
+  newItem.rowTotalHeight = newItem.rowHeight
+  tree.push(newItem)
 }
-console.log(`totalHeight: ${totalHeight}`)
+console.log(`totalHeight: ${tree.root.value.rowTotalHeight} ${Date.now() - startTime}`)
 const listView = document.querySelector('.MassiveListView')
 const scrollArea = document.querySelector('.MassiveListView .ScrollArea')
-scrollArea.style.height = totalHeight + 'px'
+scrollArea.style.height = tree.root.value.rowTotalHeight.toString() + 'px'
 const scrollAreaTop = document.querySelector('.MassiveListView > .ScrollArea > .Top')
 listView.onscroll = (event)=> {
-  console.log(listView.scrollTop)
+  let nodeStartIndex = tree.findRowForScrollTop(listView.scrollTop - 1080)
+  let nodeEndIndex = tree.findRowForScrollTop(listView.scrollTop + 1080 + 1080)
+  console.log(`${listView.scrollTop} ${nodeStartIndex} ${nodeEndIndex}`)
   //scrollAreaTop.style.height = listView.scrollTop + 'px'
 }
 </script>

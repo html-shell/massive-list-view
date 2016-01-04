@@ -225,6 +225,25 @@
     get size() {
       return this._root.size;
     },
+
+    get root() {
+      return this._root;
+    },
+
+    binarySearch: function(cmp, value) {
+      let left = -1;
+      let right = this.size
+      while (left + 1 < right) {
+        let middle = (left + right) >> 1
+        let result = cmp(this.get(middle).value, value)
+        if (result <= 0) {
+          left = middle;
+        } else {
+          right = middle;
+        }
+      }
+      return left + 1;
+    },
   };
 
   /**
