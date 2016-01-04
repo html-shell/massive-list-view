@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+
+<div class='MassiveListView'>
+  <div class='ScrollArea DisplayColumn'>
+    <div class='Top' ></div>
+    <div class='ItemA'>
+    </div>
+    <div class='ItemB'>
+    </div>
+    <div class='ItemC'>
+    </div>
+    <div flex="1"></div>
+  </div>
+</div>
+<script src="../javascripts/size-balanced-tree.js"></script>
+
+<!--script type="application/javascript;version=1.8"-->
+
+<script >
+'use strict'
+
+/**
+ * Returns a random integer between min (inclusive) and max (inclusive)
+ * Using Math.round() will give you a non-uniform distribution!
+ */
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+let array = []
+let totalHeight = 0
+for (let i = 0; i < 1000000; ++i) {
+  const newItem = {
+    height:getRandomInt(10, 30),
+    data: i
+  }
+  totalHeight += newItem.height
+  array.push(newItem)
+}
+console.log(`totalHeight: ${totalHeight}`)
+const listView = document.querySelector('.MassiveListView')
+const scrollArea = document.querySelector('.MassiveListView .ScrollArea')
+scrollArea.style.height = totalHeight + 'px'
+const scrollAreaTop = document.querySelector('.MassiveListView > .ScrollArea > .Top')
+listView.onscroll = (event)=> {
+  console.log(listView.scrollTop)
+  //scrollAreaTop.style.height = listView.scrollTop + 'px'
+}
+</script>
+
+<style>
+.MassiveListView {
+  height: 500px;
+  overflow-y: auto;
+  width:200px;
+}
+.MassiveListView > .ScrollArea {
+}
+
+.ScrollArea > .Top {
+}
+
+.ItemA {
+  height: 10px;
+  background: #008800;
+}
+
+.ItemB {
+  height: 20px;
+  background: #003399;
+}
+
+.ItemC {
+  height: 30px;
+  background: #993300;
+}
+
+.DisplayRow {
+  display: flex;
+  flex-flow: row nowrap;
+}
+.DisplayColumn {
+  display: flex;
+  flex-flow: column nowrap;
+}
+/*set flex property for items in the box*/
+.DisplayRow > [flex="1"],
+.DisplayColumn > [flex="1"]
+{
+  position: relative;
+  flex: auto; /* flex-grow: 1; flex-shrink: 1; flex-basis: auto; */
+}
+.DisplayRow > [flex="0"],
+.DisplayColumn > [flex="0"]
+{
+  flex: none; /* flex-grow: 0; flex-shrink: 0; flex-basis: auto; */
+}
+
+
+</style>
+<button>
+Do test
+</button>
