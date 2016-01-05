@@ -360,8 +360,8 @@ function CreateSBTreeClass (Node, Nil) {
     this.height = Math.max(this.left.height, this.right.height) + 1;
   };
 
-  var createNil = function (Node) {
-    var Nil = new Node(null, null, null, null, 0);
+  var createNil = function (Node, value) {
+    var Nil = new Node(value, null, null, null, 0);
     Nil.parent = Nil;
     Nil.left = Nil;
     Nil.right = Nil;
@@ -374,9 +374,10 @@ function CreateSBTreeClass (Node, Nil) {
 
   Node.prototype.updateSize = updateSize;
 
-  var Nil = createNil(Node);
+  var Nil = createNil(Node, null);
 
   exports.NodeConstructor = NodeConstructor;
+  exports.createNil = createNil;
   exports.updateSize = updateSize;
   exports.CreateSBTreeClass = CreateSBTreeClass;
 

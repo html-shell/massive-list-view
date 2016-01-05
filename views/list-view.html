@@ -20,16 +20,6 @@ Do test
 <script >
 'use strict'
 
-window.Nil.value = {
-  rowHeight: 0,
-  rowTotalHeight: 0
-}
-let oldNodeUpdateSize = window.Node.prototype.updateSize
-window.Node.prototype.updateSize = function() {
-  oldNodeUpdateSize.call(this)
-  this.value.rowTotalHeight = this.left.value.rowTotalHeight + this.right.value.rowTotalHeight + this.value.rowHeight
-}
-
 /**
  * Returns a random integer between min (inclusive) and max (inclusive)
  * Using Math.round() will give you a non-uniform distribution!
@@ -38,58 +28,74 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-window.SBTree.prototype.findRowForScrollTop = function (scrollTop) {
-  if (scrollTop >= this.root.value.rowTotalHeight) {
-    scrollTop = this.root.value.rowTotalHeight - 1
+let initListView = function () {
+  var Node = function () {
+    window.NodeConstructor.apply(this, arguments);
+    this.rowTotalHeight = this.value.rowHeight
   }
-  if (scrollTop < 0) {
-    scrollTop = 0
+
+  Node.prototype.updateSize = function() {
+    window.updateSize.call(this)
+    this.rowTotalHeight = this.left.rowTotalHeight + this.right.rowTotalHeight + this.value.rowHeight
   }
-  let node = this.root;
-  if (node !== window.Nil) {
-    while (true) {
-      if (node.left.value.rowTotalHeight > scrollTop) {
-        node = node.left
-      } else {
-        scrollTop -= node.left.value.rowTotalHeight
-        if (scrollTop < node.value.rowHeight) {
-          break
+
+  var Nil = window.createNil(Node, {rowHeight: 0})
+  var SBTree = window.CreateSBTreeClass(Node, Nil)
+  SBTree.prototype.findRowForScrollTop = function (scrollTop) {
+    if (scrollTop >= this.root.rowTotalHeight) {
+      scrollTop = this.root.rowTotalHeight - 1
+    }
+    if (scrollTop < 0) {
+      scrollTop = 0
+    }
+    let node = this.root;
+    if (node === Nil) {
+      while (true) {
+        if (node.left.rowTotalHeight > scrollTop) {
+          node = node.left
+        } else {
+          scrollTop -= node.left.rowTotalHeight
+          if (scrollTop < node.value.rowHeight) {
+            break
+          }
+          scrollTop -= node.value.rowHeight
+          node = node.right
         }
-        scrollTop -= node.value.rowHeight
-        node = node.right
       }
     }
+    return this.getIndex(node)
   }
-  return this.getIndex(node)
-}
 
-let tree = new window.SBTree()
+  let tree = new SBTree()
 
-const startTime = Date.now()
-let key = 0
-for (let i = 0; i < 500000; ++i) {
-  const newItem = {
-    rowHeight:getRandomInt(10, 10),
-    data: i,
-    key: key
-  }
-  key += 1
-  newItem.rowTotalHeight = newItem.rowHeight
-  tree.push(newItem)
-}
-console.log(`totalHeight: ${tree.root.value.rowTotalHeight} ${Date.now() - startTime}`)
-const listView = document.querySelector('.MassiveListView')
-const scrollArea = document.querySelector('.MassiveListView .ScrollArea')
-scrollArea.style.height = tree.root.value.rowTotalHeight.toString() + 'px'
-const scrollAreaTop = document.querySelector('.MassiveListView > .ScrollArea > .Top')
-listView.onscroll = (event)=> {
   const startTime = Date.now()
-  const listHeight = listView.clientHeight
-  let nodeStartIndex = tree.findRowForScrollTop(listView.scrollTop - listHeight - 1080)
-  let nodeEndIndex = tree.findRowForScrollTop(listView.scrollTop + listHeight + listHeight + 1080)
-  console.log(`${listView.scrollTop} ${nodeStartIndex} ${nodeEndIndex} ${Date.now() - startTime} ${listHeight}`)
-  //scrollAreaTop.style.height = listView.scrollTop + 'px'
+  let key = 0
+  for (let i = 0; i < 500000; ++i) {
+    const newItem = {
+      rowHeight:getRandomInt(10, 10),
+      data: i,
+      key: key
+    }
+    key += 1
+    tree.push(newItem)
+  }
+  console.log(`totalHeight: ${tree.root.rowTotalHeight} ${Date.now() - startTime}`)
+  const listView = document.querySelector('.MassiveListView')
+  const scrollArea = document.querySelector('.MassiveListView .ScrollArea')
+  scrollArea.style.height = tree.root.rowTotalHeight.toString() + 'px'
+  const scrollAreaTop = document.querySelector('.MassiveListView > .ScrollArea > .Top')
+  listView.onscroll = (event)=> {
+    const startTime = Date.now()
+    const listHeight = listView.clientHeight
+    let nodeStartIndex = tree.findRowForScrollTop(listView.scrollTop - listHeight - 1080)
+    let nodeEndIndex = tree.findRowForScrollTop(listView.scrollTop + listHeight + listHeight + 1080)
+    console.log(`${listView.scrollTop} ${nodeStartIndex} ${nodeEndIndex} ${Date.now() - startTime} ${listHeight}`)
+    //scrollAreaTop.style.height = listView.scrollTop + 'px'
+  }
 }
+
+initListView()
+
 </script>
 
 <style>
