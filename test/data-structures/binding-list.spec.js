@@ -210,6 +210,7 @@ describe('testing binding list', function () {
         rowHeight: 0
       })
     }
+
     let currentEvent
     let handler = (event) => currentEvent = event
     list.addListSelectionListener(handler)
@@ -534,6 +535,26 @@ describe('testing binding list', function () {
     expect(currentEvent.lastIndex).to.equal(8)
     expect(list.anchorSelectionIndex).to.equal(10)
     expect(list.leadSelectionIndex).to.equal(9)
+
+    // Remove on inteval with element intersect in middle right extend
+    list.clearSelection()
+    list.addSelectionInterval(6, 10)
+    currentEvent = 'noevent'
+    list.removeSelectionInterval(12, 8)
+    expect(currentEvent.firstIndex).to.equal(8)
+    expect(currentEvent.lastIndex).to.equal(10)
+    expect(list.anchorSelectionIndex).to.equal(6)
+    expect(list.leadSelectionIndex).to.equal(7)
+
+    // Remove on inteval with element intersect in middle right extend reverse
+    list.clearSelection()
+    list.addSelectionInterval(6, 10)
+    currentEvent = 'noevent'
+    list.removeSelectionInterval(8, 12)
+    expect(currentEvent.firstIndex).to.equal(8)
+    expect(currentEvent.lastIndex).to.equal(10)
+    expect(list.anchorSelectionIndex).to.equal(6)
+    expect(list.leadSelectionIndex).to.equal(7)
 
     // Remove on inteval equal set
     list.clearSelection()
