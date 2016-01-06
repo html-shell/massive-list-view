@@ -29,9 +29,21 @@ function getRandomInt(min, max) {
 }
 
 let initListView = function () {
+  /*
+    Node.selectState
+    0: the current Node's subtree are all unselected.
+    1: the current Node's subtree are all selected.
+    2: the current Node's subtree are partially selected, and the current Node are unselected.
+    3: the current Node's subtree are partially selected, and the current Node are selected.
+
+    The selectState always goes top-down ways. That means:
+    When a Node has been decided as 'selected' or 'unselected' in the ANCESTOR Node,
+    then we have no need to navigate down to check THE node's selectState.
+  */
   var Node = function () {
     window.NodeConstructor.apply(this, arguments);
     this.rowTotalHeight = this.value.rowHeight
+    this.selectState = 0
   }
 
   Node.prototype.updateSize = function() {
@@ -40,33 +52,48 @@ let initListView = function () {
   }
 
   var Nil = window.createNil(Node, {rowHeight: 0})
-  var SBTree = window.CreateSBTreeClass(Node, Nil)
-  SBTree.prototype.findRowForScrollTop = function (scrollTop) {
-    if (scrollTop >= this.root.rowTotalHeight) {
-      scrollTop = this.root.rowTotalHeight - 1
+  var SBTree = window.CreateSBTreeClass(Node, Nil, window.updateChild)
+  var NewSBTree = function(){
+    SBTree.call(this)
+  }
+
+  NewSBTree.prototype = Object.create(SBTree.prototype); // See note below
+  NewSBTree.prototype.constructor = NewSBTree
+  function updateNode (node) {
+    while (node !== Nil) {
+      node.updateSize()
+      node = node.parent
     }
+  }
+  NewSBTree.prototype.insertLeafNode = updateNode
+  NewSBTree.prototype.removeLeafNode = updateNode
+  NewSBTree.prototype.findRowForScrollTop = function (scrollTop) {
+    if (this.root.rowTotalHeight === 0) {
+      return 0
+    }
+
     if (scrollTop < 0) {
       scrollTop = 0
+    } else if (scrollTop >= this.root.rowTotalHeight) {
+      scrollTop = this.root.rowTotalHeight - 1
     }
     let node = this.root;
-    if (node === Nil) {
-      while (true) {
-        if (node.left.rowTotalHeight > scrollTop) {
-          node = node.left
-        } else {
-          scrollTop -= node.left.rowTotalHeight
-          if (scrollTop < node.value.rowHeight) {
-            break
-          }
-          scrollTop -= node.value.rowHeight
-          node = node.right
+    while (true) {
+      if (node.left.rowTotalHeight > scrollTop) {
+        node = node.left
+      } else {
+        scrollTop -= node.left.rowTotalHeight
+        if (scrollTop < node.value.rowHeight) {
+          break
         }
+        scrollTop -= node.value.rowHeight
+        node = node.right
       }
     }
     return this.getIndex(node)
   }
 
-  let tree = new SBTree()
+  let tree = new NewSBTree()
 
   const startTime = Date.now()
   let key = 0
@@ -87,9 +114,10 @@ let initListView = function () {
   listView.onscroll = (event)=> {
     const startTime = Date.now()
     const listHeight = listView.clientHeight
-    let nodeStartIndex = tree.findRowForScrollTop(listView.scrollTop - listHeight - 1080)
-    let nodeEndIndex = tree.findRowForScrollTop(listView.scrollTop + listHeight + listHeight + 1080)
-    console.log(`${listView.scrollTop} ${nodeStartIndex} ${nodeEndIndex} ${Date.now() - startTime} ${listHeight}`)
+    const scrollTop = listView.scrollTop
+    let nodeStartIndex = tree.findRowForScrollTop(scrollTop - listHeight - 1080)
+    let nodeEndIndex = tree.findRowForScrollTop(scrollTop + listHeight + listHeight + 1080)
+    console.log(`${scrollTop} ${nodeStartIndex} ${nodeEndIndex} ${Date.now() - startTime} ${listHeight}`)
     //scrollAreaTop.style.height = listView.scrollTop + 'px'
   }
 }
