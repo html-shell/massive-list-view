@@ -4,14 +4,7 @@ var sbt = require('./size-balanced-tree.js')
 var selectionListeners = require('./selection-model-listener.js')
 var normalSelectionModel = require('./normal-selection-model.js')
 var multiSelectionModel = require('./multi-selection-model.js')
-
-// https://docs.oracle.com/javase/8/docs/api/javax/swing/ListSelectionModel.html
-var ListSelectionModel = {
-  MULTIPLE_INTERVAL_SELECTION: 0,
-  SINGLE_INTERVAL_SELECTION: 1,
-  SINGLE_SELECTION: 2
-}
-
+var ListSelectionModel = require('./list-selection-model.js')
 /*
   Node.selectState
   0: the current Node's subtree are all unselected.
@@ -59,6 +52,7 @@ var InitBindingListClass = function () {
           console.error(`The selection mode:${selectionMode} doesn't support yet`)
           break
       }
+      this.clearSelection()
     }
   })
 
@@ -89,10 +83,8 @@ var BindingList = function (options) {
   options = options || {}
   BaseBindingList.call(this)
   InitBindingListClass.call(this)
-  this.selectionMode = (options.selectionMode || ListSelectionModel.SINGLE_SELECTION)
-  this.anchorSelectionIndex = null
-  this.leadSelectionIndex = null
   this.listeners = []
+  this.selectionMode = (options.selectionMode || ListSelectionModel.SINGLE_SELECTION)
 }
 
 BindingList.prototype = BaseBindingList.prototype
@@ -139,6 +131,20 @@ BindingList.prototype.findRowForScrollTop = function (scrollTop) {
   return this.getIndex(node)
 }
 
-BindingList.prototype.selectionMode =
+// Represents a change in selection status between firstIndex and lastIndex, inclusive.
+BindingList.prototype.selectionChanged = function (firstIndex, lastIndex) {
+  for (let listener of this.listeners) {
+    try {
+      listener({
+        target: this,
+        firstIndex: firstIndex,
+        lastIndex: lastIndex
+      })
+    } catch (e) {
+      console.log(e + e.stack)
+    }
+  }
+}
+
 exports.BindingList = BindingList
 exports.ListSelectionModel = ListSelectionModel

@@ -7,3 +7,19 @@ function getRandomInt (min, max) {
 }
 
 exports.getRandomInt = getRandomInt
+
+
+exports.removeItemsFromArray = function (arr) {
+  for (let i = 1; i < arguments.length; ++i) {
+    let what = arguments[i]
+    let pos = 0
+    while (true) {
+      pos = arr.indexOf(what, pos)
+      if (pos < 0) {
+        break
+      }
+      arr.splice(pos, 1)
+    }
+  }
+  return arr
+}
