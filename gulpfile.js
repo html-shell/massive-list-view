@@ -36,8 +36,14 @@ gulp.task('server',function(){
     console.log(data);
   });
 })
+const reloadList = [
+  'public/images/**/*',
+  'public/stylesheets/**/*',
+  'public/build/**/*',
+  'views/**/*'
+]
 gulp.task('reload', function(){
-  gulp.src(['public/*/*','views/*'])
+  gulp.src(reloadList)
     .pipe(livereload());  
 })
 
@@ -45,12 +51,7 @@ gulp.task('watch',['server', 'scripts'],function(){
   livereload.listen();
   gulp.watch(['js/*.js','app.js','routes/*'],['server']);
 
-  gulp.watch([
-    'public/images/**/*',
-    'public/stylesheets/**/*',
-    'public/build/**/*',
-    'views/**/*'
-  ], ['reload']);
+  gulp.watch(reloadList, ['reload']);
 
   gulp.watch([
     'public/images/**/*',
