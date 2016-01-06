@@ -22,6 +22,7 @@ describe('testing binding list', function () {
     expect(list.findRowForScrollTop(990)).to.equal(99)
     expect(list.findRowForScrollTop(989)).to.equal(98)
   });
+
   it('should have correct total height when rowHeight are different', function () {
     let list = new BindingList()
     for (let i = 0; i < 100; ++i) {
@@ -44,6 +45,7 @@ describe('testing binding list', function () {
     expect(list.findRowForScrollTop(4753)).to.equal(98)
     expect(list.findRowForScrollTop(4752)).to.equal(97)
   })
+
   it('should have automatically skip zero height rows', function () {
     let list = new BindingList()
     for (let i = 0; i < 100; ++i) {

@@ -14,7 +14,6 @@ gulp.task('test', () => {
 });
 
 gulp.task('scripts', function() {
-  console.log('scripts')
   gulp.src(['public/javascripts/index.js'])
     .pipe(browserify({
     }))
