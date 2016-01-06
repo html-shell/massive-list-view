@@ -47,7 +47,7 @@ let initListView = function () {
   }
 
   Node.prototype.updateSize = function() {
-    window.updateSize.call(this)
+    this.size = this.left.size + this.right.size + 1;
     this.rowTotalHeight = this.left.rowTotalHeight + this.right.rowTotalHeight + this.value.rowHeight
   }
 
