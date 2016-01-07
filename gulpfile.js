@@ -3,7 +3,8 @@
 const gulp = require('gulp')
 const spawn = require('child_process').spawn
 const livereload = require('gulp-livereload')
-const mocha = require('gulp-mocha')
+const istanbul = require('gulp-istanbul') // Code coverage
+const mocha = require('gulp-mocha') // Unit testing
 const browserify = require('gulp-browserify')
 
 const globals = {}
@@ -13,11 +14,35 @@ function handleError (e) {
   this.emit('end')
 }
 
+gulp.task('pre-test', () => {
+  return gulp.src('public/javascripts/**/*')
+    // Covering files
+    .pipe(istanbul())
+    // Force `require` to return covered files
+    .pipe(istanbul.hookRequire())
+})
+
 gulp.task('test', () => {
   // gulp-mocha needs filepaths so you can't have any plugins before it
   return gulp.src(['test/*/*'], {read: false})
     .pipe(
       mocha({reporter: 'spec'}).on('error', handleError)
+    )
+})
+
+gulp.task('coverage', ['pre-test'], () => {
+  // gulp-mocha needs filepaths so you can't have any plugins before it
+  return gulp.src(['test/*/*'], {read: false})
+    .pipe(
+      mocha({reporter: 'spec'}).on('error', handleError)
+    )
+    // Creating the reports after tests ran
+    .pipe(
+      istanbul.writeReports()
+    )
+    // Enforce a coverage of at least 90%
+    .pipe(
+      istanbul.enforceThresholds({ thresholds: { global: 10 } })
     )
 })
 

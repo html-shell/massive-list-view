@@ -63,7 +63,7 @@ exports.OverrideIntervalWith = (options) => {
   // It's should be like this, cause the old interval are removed
   // and the new interval are setting down
   change.firstIndex = Math.min(options.minExist, options.minNew)
-  change.lastIndex = Math.min(options.maxExist, options.maxNew)
+  change.lastIndex = Math.max(options.maxExist, options.maxNew)
   return change
 }
 
@@ -160,19 +160,25 @@ NormalSelectionModel.prototype = {
     if (this.isSelectionEmpty()) {
       return
     }
-    let options = this.getIntervalOptions(index0, index1)
+    let options = this.getIntervalOptions(index0, index1, true)
     let intersect = exports.IntersectInterval(options)
     // Nothing to clear
     if (intersect === null) {
       return
     }
-    let changed = exports.MinusInterval(
+    let leaveBehind = exports.MinusInterval(
       options.minExist, options.maxExist,
       intersect.min, intersect.max
     )
-    if (changed.min && changed.max) {
-      this._min = changed.min
-      this._max = changed.max
+    if (leaveBehind.min && leaveBehind.max) {
+      console.log(leaveBehind, intersect, index0, index1)
+      if (leaveBehind.min <= leaveBehind.max) {
+        this._min = leaveBehind.min
+        this._max = leaveBehind.max
+      } else { // The whole interval are removed
+        this._min = -1
+        this._max = -1
+      }
       return this.selectionChanged(intersect.min, intersect.max)
     } else {
       // For interval truely inside the exist interval,
@@ -181,8 +187,9 @@ NormalSelectionModel.prototype = {
     }
   },
 
-  getIntervalOptions: function (index0, index1) {
-    if (this.selectionMode === ListSelectionModel.SINGLE_SELECTION) {
+  getIntervalOptions: function (index0, index1, isRemoveInterval) {
+    if (this.selectionMode === ListSelectionModel.SINGLE_SELECTION &&
+        isRemoveInterval !== true) {
       index0 = index1
     }
     return {

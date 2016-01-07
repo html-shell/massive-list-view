@@ -85,6 +85,8 @@ var BindingList = function (options) {
   InitBindingListClass.call(this)
   this.listeners = []
   this.selectionMode = (options.selectionMode || ListSelectionModel.SINGLE_SELECTION)
+  this.anchorSelectionIndex = -1
+  this.leadSelectionIndex = -1
 }
 
 BindingList.prototype = BaseBindingList.prototype
@@ -103,6 +105,7 @@ function updateNode (node) {
     node = node.parent
   }
 }
+
 BindingList.prototype.insertLeafNode = updateNode
 BindingList.prototype.removeLeafNode = updateNode
 BindingList.prototype.findRowForScrollTop = function (scrollTop) {

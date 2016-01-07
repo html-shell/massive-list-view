@@ -138,6 +138,7 @@ describe('testing binding list', function () {
     list.addSelectionInterval(0, 2)
     currentEvent = null
     list.addSelectionInterval(5, 3)
+    expect(list.getMinSelectionIndex()).to.equal(3)
     expect(currentEvent.firstIndex).to.equal(2)
     expect(currentEvent.lastIndex).to.equal(3)
 
