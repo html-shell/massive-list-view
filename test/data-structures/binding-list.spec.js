@@ -104,6 +104,18 @@ describe('testing binding list', function () {
     expect(list.leadSelectionIndex).to.equal(0)
   })
 
+  it('test listener add remove', function () {
+    let list = new BindingList()
+    list.selectionMode = ListSelectionModel.SINGLE_SELECTION
+    let currentEvent
+    let handler = (event) => currentEvent = event
+    list.addListSelectionListener(handler)
+    list.removeListSelectionListener(null)
+    expect(list.listeners.length).to.equal(1)
+    list.removeListSelectionListener(handler)
+    expect(currentEvent).to.equal(undefined)
+  })
+
   it('test SINGLE_SELECTION ', function () {
     let list = new BindingList()
     list.selectionMode = ListSelectionModel.SINGLE_SELECTION
@@ -231,8 +243,6 @@ describe('testing binding list', function () {
     expect(currentEvent.lastIndex).to.equal(10)
     expect(list.getMaxSelectionIndex()).to.equal(10)
     expect(list.getMinSelectionIndex()).to.equal(5)
-    expect(list.anchorSelectionIndex).to.equal(5)
-    expect(list.leadSelectionIndex).to.equal(10)
 
     // conjunction with [5,6] without overlapp, through 6,7 reverse
     list.clearSelection()
@@ -241,8 +251,8 @@ describe('testing binding list', function () {
     list.addSelectionInterval(7, 10)
     expect(currentEvent.firstIndex).to.equal(7)
     expect(currentEvent.lastIndex).to.equal(10)
-    expect(list.anchorSelectionIndex).to.equal(5)
-    expect(list.leadSelectionIndex).to.equal(10)
+    expect(list.getMinSelectionIndex()).to.equal(5)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
 
     // conjunction with [5,6] with overlapp, through 6
     list.clearSelection()
@@ -251,8 +261,8 @@ describe('testing binding list', function () {
     list.addSelectionInterval(6, 10)
     expect(currentEvent.firstIndex).to.equal(7)
     expect(currentEvent.lastIndex).to.equal(10)
-    expect(list.anchorSelectionIndex).to.equal(5)
-    expect(list.leadSelectionIndex).to.equal(10)
+    expect(list.getMinSelectionIndex()).to.equal(5)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
 
     // conjunction with [5,6] with overlapp, through 6 reverse
     list.clearSelection()
@@ -261,8 +271,8 @@ describe('testing binding list', function () {
     list.addSelectionInterval(10, 6)
     expect(currentEvent.firstIndex).to.equal(7)
     expect(currentEvent.lastIndex).to.equal(10)
-    expect(list.anchorSelectionIndex).to.equal(5)
-    expect(list.leadSelectionIndex).to.equal(10)
+    expect(list.getMinSelectionIndex()).to.equal(5)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
 
     // conjunction with [8,10] without overlapp, through 8,7 on left
     list.clearSelection()
@@ -271,8 +281,8 @@ describe('testing binding list', function () {
     list.addSelectionInterval(7, 3)
     expect(currentEvent.firstIndex).to.equal(3)
     expect(currentEvent.lastIndex).to.equal(7)
-    expect(list.anchorSelectionIndex).to.equal(10)
-    expect(list.leadSelectionIndex).to.equal(3)
+    expect(list.getMinSelectionIndex()).to.equal(3)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
 
     // conjunction with [8,10] without overlapp, through 8,7 on left reverse
     list.clearSelection()
@@ -281,8 +291,8 @@ describe('testing binding list', function () {
     list.addSelectionInterval(3, 7)
     expect(currentEvent.firstIndex).to.equal(3)
     expect(currentEvent.lastIndex).to.equal(7)
-    expect(list.anchorSelectionIndex).to.equal(10)
-    expect(list.leadSelectionIndex).to.equal(3)
+    expect(list.getMinSelectionIndex()).to.equal(3)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
 
     // conjunction with [8,10] with overlapp, through 8 on left
     list.clearSelection()
@@ -291,8 +301,8 @@ describe('testing binding list', function () {
     list.addSelectionInterval(8, 3)
     expect(currentEvent.firstIndex).to.equal(3)
     expect(currentEvent.lastIndex).to.equal(7)
-    expect(list.anchorSelectionIndex).to.equal(10)
-    expect(list.leadSelectionIndex).to.equal(3)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
+    expect(list.getMinSelectionIndex()).to.equal(3)
 
     // conjunction with [8,10] with overlapp, through 8 on left reverse
     list.clearSelection()
@@ -301,8 +311,8 @@ describe('testing binding list', function () {
     list.addSelectionInterval(3, 8)
     expect(currentEvent.firstIndex).to.equal(3)
     expect(currentEvent.lastIndex).to.equal(7)
-    expect(list.anchorSelectionIndex).to.equal(10)
-    expect(list.leadSelectionIndex).to.equal(3)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
+    expect(list.getMinSelectionIndex()).to.equal(3)
 
     expect(list.isSelectedIndex(2)).to.equal(false)
     expect(list.isSelectedIndex(3)).to.equal(true)
@@ -314,32 +324,26 @@ describe('testing binding list', function () {
     list.addSelectionInterval(5, 10)
     // No conjunction with the exist intervals, on right
     currentEvent = 'noevent'
-    let noInterval = () => list.addSelectionInterval(12, 15)
-    expect(noInterval).to.throw(Error)
-    expect(currentEvent).to.equal('noevent')
+    list.addSelectionInterval(12, 15)
+    expect(currentEvent.firstIndex).to.equal(5)
+    expect(currentEvent.lastIndex).to.equal(15)
     expect(list.isSelectionEmpty()).to.equal(false)
 
-    // No conjunction with the exist intervals, on right reverse
-    currentEvent = 'noevent'
-    noInterval = () => list.addSelectionInterval(15, 12)
-    expect(noInterval).to.throw(Error)
-    expect(currentEvent).to.equal('noevent')
-
+    list.clearSelection()
+    list.addSelectionInterval(5, 10)
     // No conjunction with the exist intervals, on left
     currentEvent = 'noevent'
-    noInterval = () => list.addSelectionInterval(1, 3)
-    expect(noInterval).to.throw(Error)
-    expect(currentEvent).to.equal('noevent')
+    list.addSelectionInterval(1, 3)
+    expect(currentEvent.firstIndex).to.equal(1)
+    expect(currentEvent.lastIndex).to.equal(10)
+    expect(list.isSelectionEmpty()).to.equal(false)
 
-    // No conjunction with the exist intervals, on left reverse
-    currentEvent = 'noevent'
-    noInterval = () => list.addSelectionInterval(3, 1)
-    expect(noInterval).to.throw(Error)
-    expect(currentEvent).to.equal('noevent')
-
+    list.clearSelection()
+    list.addSelectionInterval(2, 10)
     // True sub interval
     currentEvent = 'noevent'
     list.addSelectionInterval(5, 6)
+    // console.log(currentEvent)
     expect(currentEvent).to.equal('noevent')
 
     // Sub interval, left touched
@@ -365,10 +369,10 @@ describe('testing binding list', function () {
     // Clear the interval
     currentEvent = 'noevent'
     list.clearSelection()
-    expect(currentEvent.firstIndex).to.equal(5)
+    expect(currentEvent.firstIndex).to.equal(2)
     expect(currentEvent.lastIndex).to.equal(10)
-    expect(list.anchorSelectionIndex).to.equal(-1)
-    expect(list.leadSelectionIndex).to.equal(-1)
+    expect(list.getMaxSelectionIndex()).to.equal(-1)
+    expect(list.getMinSelectionIndex()).to.equal(-1)
 
     // Superset Left equal, extend right
     list.clearSelection()
@@ -377,18 +381,8 @@ describe('testing binding list', function () {
     list.addSelectionInterval(6, 13)
     expect(currentEvent.firstIndex).to.equal(11)
     expect(currentEvent.lastIndex).to.equal(13)
-    expect(list.anchorSelectionIndex).to.equal(6)
-    expect(list.leadSelectionIndex).to.equal(13)
-
-    // Superset Left equal, extend right reverse
-    list.clearSelection()
-    list.addSelectionInterval(6, 10)
-    currentEvent = 'noevent'
-    list.addSelectionInterval(6, 13)
-    expect(currentEvent.firstIndex).to.equal(11)
-    expect(currentEvent.lastIndex).to.equal(13)
-    expect(list.anchorSelectionIndex).to.equal(6)
-    expect(list.leadSelectionIndex).to.equal(13)
+    expect(list.getMinSelectionIndex()).to.equal(6)
+    expect(list.getMaxSelectionIndex()).to.equal(13)
 
     // Superset Right equal, extend left
     list.clearSelection()
@@ -397,18 +391,8 @@ describe('testing binding list', function () {
     list.addSelectionInterval(3, 10)
     expect(currentEvent.firstIndex).to.equal(3)
     expect(currentEvent.lastIndex).to.equal(5)
-    expect(list.anchorSelectionIndex).to.equal(10)
-    expect(list.leadSelectionIndex).to.equal(3)
-
-    // Superset Right equal, extend left reverse
-    list.clearSelection()
-    list.addSelectionInterval(6, 10)
-    currentEvent = 'noevent'
-    list.addSelectionInterval(10, 3)
-    expect(currentEvent.firstIndex).to.equal(3)
-    expect(currentEvent.lastIndex).to.equal(5)
-    expect(list.anchorSelectionIndex).to.equal(10)
-    expect(list.leadSelectionIndex).to.equal(3)
+    expect(list.getMinSelectionIndex()).to.equal(3)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
 
     // One in middle, other extend right
     list.clearSelection()
@@ -417,18 +401,8 @@ describe('testing binding list', function () {
     list.addSelectionInterval(8, 12)
     expect(currentEvent.firstIndex).to.equal(11)
     expect(currentEvent.lastIndex).to.equal(12)
-    expect(list.anchorSelectionIndex).to.equal(6)
-    expect(list.leadSelectionIndex).to.equal(12)
-
-    // One in middle, other extend right reverse
-    list.clearSelection()
-    list.addSelectionInterval(6, 10)
-    currentEvent = 'noevent'
-    list.addSelectionInterval(12, 8)
-    expect(currentEvent.firstIndex).to.equal(11)
-    expect(currentEvent.lastIndex).to.equal(12)
-    expect(list.anchorSelectionIndex).to.equal(6)
-    expect(list.leadSelectionIndex).to.equal(12)
+    expect(list.getMinSelectionIndex()).to.equal(6)
+    expect(list.getMaxSelectionIndex()).to.equal(12)
 
     // One in middle, other extend left
     list.clearSelection()
@@ -437,8 +411,8 @@ describe('testing binding list', function () {
     list.addSelectionInterval(3, 8)
     expect(currentEvent.firstIndex).to.equal(3)
     expect(currentEvent.lastIndex).to.equal(5)
-    expect(list.anchorSelectionIndex).to.equal(10)
-    expect(list.leadSelectionIndex).to.equal(3)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
+    expect(list.getMinSelectionIndex()).to.equal(3)
 
     // One in middle, other extend left reverse
     list.clearSelection()
@@ -447,8 +421,8 @@ describe('testing binding list', function () {
     list.addSelectionInterval(8, 3)
     expect(currentEvent.firstIndex).to.equal(3)
     expect(currentEvent.lastIndex).to.equal(5)
-    expect(list.anchorSelectionIndex).to.equal(10)
-    expect(list.leadSelectionIndex).to.equal(3)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
+    expect(list.getMinSelectionIndex()).to.equal(3)
 
     // Remove on no interval
     list.clearSelection()
@@ -504,8 +478,8 @@ describe('testing binding list', function () {
     list.removeSelectionInterval(6, 3)
     expect(currentEvent.firstIndex).to.equal(6)
     expect(currentEvent.lastIndex).to.equal(6)
-    expect(list.anchorSelectionIndex).to.equal(10)
-    expect(list.leadSelectionIndex).to.equal(7)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
+    expect(list.getMinSelectionIndex()).to.equal(7)
 
     // Remove on inteval with single element intersect left reverse
     list.clearSelection()
@@ -514,8 +488,8 @@ describe('testing binding list', function () {
     list.removeSelectionInterval(3, 6)
     expect(currentEvent.firstIndex).to.equal(6)
     expect(currentEvent.lastIndex).to.equal(6)
-    expect(list.anchorSelectionIndex).to.equal(10)
-    expect(list.leadSelectionIndex).to.equal(7)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
+    expect(list.getMinSelectionIndex()).to.equal(7)
 
     // Remove on inteval with element intersect in middle left extend
     list.clearSelection()
@@ -524,8 +498,8 @@ describe('testing binding list', function () {
     list.removeSelectionInterval(3, 8)
     expect(currentEvent.firstIndex).to.equal(6)
     expect(currentEvent.lastIndex).to.equal(8)
-    expect(list.anchorSelectionIndex).to.equal(10)
-    expect(list.leadSelectionIndex).to.equal(9)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
+    expect(list.getMinSelectionIndex()).to.equal(9)
 
     // Remove on inteval with element intersect in middle left extend reverse
     list.clearSelection()
@@ -534,8 +508,8 @@ describe('testing binding list', function () {
     list.removeSelectionInterval(8, 3)
     expect(currentEvent.firstIndex).to.equal(6)
     expect(currentEvent.lastIndex).to.equal(8)
-    expect(list.anchorSelectionIndex).to.equal(10)
-    expect(list.leadSelectionIndex).to.equal(9)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
+    expect(list.getMinSelectionIndex()).to.equal(9)
 
     // Remove on inteval with element intersect in middle right extend
     list.clearSelection()
@@ -544,18 +518,8 @@ describe('testing binding list', function () {
     list.removeSelectionInterval(12, 8)
     expect(currentEvent.firstIndex).to.equal(8)
     expect(currentEvent.lastIndex).to.equal(10)
-    expect(list.anchorSelectionIndex).to.equal(6)
-    expect(list.leadSelectionIndex).to.equal(7)
-
-    // Remove on inteval with element intersect in middle right extend reverse
-    list.clearSelection()
-    list.addSelectionInterval(6, 10)
-    currentEvent = 'noevent'
-    list.removeSelectionInterval(8, 12)
-    expect(currentEvent.firstIndex).to.equal(8)
-    expect(currentEvent.lastIndex).to.equal(10)
-    expect(list.anchorSelectionIndex).to.equal(6)
-    expect(list.leadSelectionIndex).to.equal(7)
+    expect(list.getMinSelectionIndex()).to.equal(6)
+    expect(list.getMaxSelectionIndex()).to.equal(7)
 
     // Remove on inteval equal set
     list.clearSelection()
@@ -564,8 +528,8 @@ describe('testing binding list', function () {
     list.removeSelectionInterval(6, 10)
     expect(currentEvent.firstIndex).to.equal(6)
     expect(currentEvent.lastIndex).to.equal(10)
-    expect(list.anchorSelectionIndex).to.equal(-1)
-    expect(list.leadSelectionIndex).to.equal(-1)
+    expect(list.getMaxSelectionIndex()).to.equal(-1)
+    expect(list.getMinSelectionIndex()).to.equal(-1)
 
     // Remove on inteval equal set bigger
     list.clearSelection()
@@ -574,8 +538,8 @@ describe('testing binding list', function () {
     list.removeSelectionInterval(5, 11)
     expect(currentEvent.firstIndex).to.equal(6)
     expect(currentEvent.lastIndex).to.equal(10)
-    expect(list.anchorSelectionIndex).to.equal(-1)
-    expect(list.leadSelectionIndex).to.equal(-1)
+    expect(list.getMaxSelectionIndex()).to.equal(-1)
+    expect(list.getMinSelectionIndex()).to.equal(-1)
 
     // Remove on inteval equal set bigger, left equal
     list.clearSelection()
@@ -584,8 +548,8 @@ describe('testing binding list', function () {
     list.removeSelectionInterval(6, 11)
     expect(currentEvent.firstIndex).to.equal(6)
     expect(currentEvent.lastIndex).to.equal(10)
-    expect(list.anchorSelectionIndex).to.equal(-1)
-    expect(list.leadSelectionIndex).to.equal(-1)
+    expect(list.getMaxSelectionIndex()).to.equal(-1)
+    expect(list.getMinSelectionIndex()).to.equal(-1)
 
     // Remove on inteval equal set bigger, right equal
     list.clearSelection()
@@ -594,22 +558,34 @@ describe('testing binding list', function () {
     list.removeSelectionInterval(5, 10)
     expect(currentEvent.firstIndex).to.equal(6)
     expect(currentEvent.lastIndex).to.equal(10)
-    expect(list.anchorSelectionIndex).to.equal(-1)
-    expect(list.leadSelectionIndex).to.equal(-1)
+    expect(list.getMaxSelectionIndex()).to.equal(-1)
+    expect(list.getMinSelectionIndex()).to.equal(-1)
 
     // Remove on inteval cause two interval
     list.clearSelection()
     list.addSelectionInterval(6, 10)
     currentEvent = 'noevent'
-    let removeInteval = () => list.removeSelectionInterval(7, 8)
-    expect(removeInteval).to.throw(Error)
+    list.removeSelectionInterval(7, 8)
     expect(currentEvent).to.equal('noevent')
+    expect(list.getMinSelectionIndex()).to.equal(6)
+    expect(list.getMaxSelectionIndex()).to.equal(10)
 
+    // Clear the interval
     currentEvent = null
     list.clearSelection()
     expect(currentEvent.firstIndex).to.equal(6)
     expect(currentEvent.lastIndex).to.equal(10)
     expect(list.getMinSelectionIndex()).to.equal(-1)
     expect(list.getMaxSelectionIndex()).to.equal(-1)
+
+    // Add an interval that super contains the exist interval
+    list.clearSelection()
+    list.addSelectionInterval(6, 10)
+    currentEvent = 'noevent'
+    list.addSelectionInterval(3, 18)
+    expect(currentEvent.firstIndex).to.equal(3)
+    expect(currentEvent.lastIndex).to.equal(18)
+    expect(list.getMinSelectionIndex()).to.equal(3)
+    expect(list.getMaxSelectionIndex()).to.equal(18)
   })
 })

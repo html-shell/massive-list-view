@@ -13,13 +13,13 @@ let ListSelectionModel = require('./list-selection-model.js')
 // If exit interval and new interval are intesected, then return the
 // confunction of these two interval
 exports.JoinIntervalIntersected = (options) => {
-  // The only two posibility that have not intersect with exist interval
+  // The only three posibility that have not intersect with exist interval
   if (options.maxNew + 1 < options.minExist ||
       options.minNew - 1 > options.maxExist ||
-      options.minExist === -1 ||
-      options.maxExist === -1) {
+      (options.minExist === -1 ||
+      options.maxExist === -1)) {
     // It's turns out to be override
-    return exports.OverrideIntervalWith(options.minExist, options.maxExist, options.minNew, options.maxNew)
+    return exports.OverrideIntervalWith(options)
   }
   let newInterval = {
     min: Math.min(options.minExist, options.minNew),
@@ -29,13 +29,14 @@ exports.JoinIntervalIntersected = (options) => {
     newInterval.min, newInterval.max,
     options.minExist, options.maxExist
   )
+
   // If the two interval's confunctoin are true contains the
   // exist interval, then the change are should be the whole
   // new interval
   if (changed.min === undefined || changed.max === undefined) {
     newInterval.firstIndex = newInterval.min
     newInterval.lastIndex = newInterval.max
-  } else {
+  } else if (changed.min <= changed.max) {
     newInterval.firstIndex = changed.min
     newInterval.lastIndex = changed.max
   }
@@ -68,11 +69,11 @@ exports.OverrideIntervalWith = (options) => {
 }
 
 // interval A always contains B
-// if B inside of A then return A, for exmaple [3, 5] inside [1,6], but
+// if B inside of A or A === B then return emptry, for exmaple [3, 5] inside [1,6], but
 // [3,6] not inside [1, 6]
 // otherwise, return the remaining interval
 exports.MinusInterval = (minA, maxA, minB, maxB) => {
-  if (minA < minB && maxB < maxA) {
+  if ((minA < minB && maxB < maxA)) {
     return {}
   }
   if (minA === minB) {
@@ -125,7 +126,7 @@ NormalSelectionModel.prototype = {
   clearSelection: function () {
     let min = this.getMinSelectionIndex()
     let max = this.getMaxSelectionIndex()
-    if (min !== -1 && max !== -1) {
+    if (min !== -1 || max !== -1) {
       this._min = -1
       this._max = -1
       return this.selectionChanged(min, max)
@@ -134,12 +135,12 @@ NormalSelectionModel.prototype = {
 
   // Returns the last selected index or -1 if the selection is empty.
   getMaxSelectionIndex: function () {
-    return this._min
+    return this._max
   },
 
   // Returns the first selected index or -1 if the selection is empty.
   getMinSelectionIndex: function () {
-    return this._max
+    return this._min
   },
 
   // Returns true if the specified index is selected.
@@ -170,15 +171,16 @@ NormalSelectionModel.prototype = {
       options.minExist, options.maxExist,
       intersect.min, intersect.max
     )
+
+    // The whole interval are removed
+    if (intersect.min === options.minExist && intersect.max === options.maxExist) {
+      this._min = -1
+      this._max = -1
+      return this.selectionChanged(intersect.min, intersect.max)
+    }
     if (leaveBehind.min && leaveBehind.max) {
-      console.log(leaveBehind, intersect, index0, index1)
-      if (leaveBehind.min <= leaveBehind.max) {
-        this._min = leaveBehind.min
-        this._max = leaveBehind.max
-      } else { // The whole interval are removed
-        this._min = -1
-        this._max = -1
-      }
+      this._min = leaveBehind.min
+      this._max = leaveBehind.max
       return this.selectionChanged(intersect.min, intersect.max)
     } else {
       // For interval truely inside the exist interval,
