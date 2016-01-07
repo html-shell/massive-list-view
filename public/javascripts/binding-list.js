@@ -2,7 +2,7 @@
 
 var sbt = require('./size-balanced-tree.js')
 var selectionListeners = require('./selection-model-listener.js')
-var normalSelectionModel = require('./normal-selection-model.js')
+var NormalSelectionModel = require('./normal-selection-model.js')
 var multiSelectionModel = require('./multi-selection-model.js')
 var ListSelectionModel = require('./list-selection-model.js')
 /*
@@ -43,7 +43,7 @@ var InitBindingListClass = function () {
       switch (selectionMode) {
         case ListSelectionModel.SINGLE_SELECTION:
         case ListSelectionModel.SINGLE_INTERVAL_SELECTION:
-          updateMethods(this, normalSelectionModel)
+          updateMethods(this, NormalSelectionModel.prototype)
           break
         case ListSelectionModel.MULTIPLE_INTERVAL_SELECTION:
           updateMethods(this, multiSelectionModel)
@@ -133,6 +133,9 @@ BindingList.prototype.findRowForScrollTop = function (scrollTop) {
 
 // Represents a change in selection status between firstIndex and lastIndex, inclusive.
 BindingList.prototype.selectionChanged = function (firstIndex, lastIndex) {
+  if (!firstIndex || !lastIndex) {
+    return
+  }
   for (let listener of this.listeners) {
     try {
       listener({
