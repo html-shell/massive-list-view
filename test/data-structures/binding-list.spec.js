@@ -1,6 +1,7 @@
 'use strict'
 const expect = require('chai').expect
 const bindingList = require('../../public/javascripts/binding-list.js')
+const NormalSelectionModel = require('../../public/javascripts/normal-selection-model.js')
 const BindingList = bindingList.BindingList
 const ListSelectionModel = bindingList.ListSelectionModel
 
@@ -116,6 +117,11 @@ describe('testing binding list', function () {
     expect(currentEvent).to.equal(undefined)
   })
 
+  it('test NormalSelectionModel', function () {
+    let selector = new NormalSelectionModel()
+    expect(selector.getMinSelectionIndex()).to.equal(-1)
+    expect(selector.getMaxSelectionIndex()).to.equal(-1)
+  })
   it('test SINGLE_SELECTION ', function () {
     let list = new BindingList()
     list.selectionMode = ListSelectionModel.SINGLE_SELECTION
