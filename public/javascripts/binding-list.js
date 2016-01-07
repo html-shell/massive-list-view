@@ -147,6 +147,7 @@ BindingList.prototype.selectionChanged = function (firstIndex, lastIndex) {
         lastIndex: lastIndex
       })
     } catch (e) {
+      /* istanbul ignore next */
       console.log(e + e.stack)
     }
   }

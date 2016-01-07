@@ -182,11 +182,11 @@ NormalSelectionModel.prototype = {
       this._min = leaveBehind.min
       this._max = leaveBehind.max
       return this.selectionChanged(intersect.min, intersect.max)
-    } else {
-      // For interval truely inside the exist interval,
-      // we do nothing for it, cause if we remove that
-      // interval would cause the interval to be two interval
     }
+
+    // Otherwise for interval truely inside the exist interval,
+    // we do nothing for it, cause if we remove that
+    // interval would cause the interval to be two interval
   },
 
   getIntervalOptions: function (index0, index1, isRemoveInterval) {
