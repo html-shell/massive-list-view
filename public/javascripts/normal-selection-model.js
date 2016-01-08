@@ -104,6 +104,8 @@ exports.IntersectInterval = (options) => {
 }
 
 let NormalSelectionModel = function () {
+  this._min = -1
+  this._max = -1
   this.clearSelection()
 }
 

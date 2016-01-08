@@ -122,6 +122,7 @@ describe('testing binding list', function () {
     expect(selector.getMinSelectionIndex()).to.equal(-1)
     expect(selector.getMaxSelectionIndex()).to.equal(-1)
   })
+
   it('test SINGLE_SELECTION ', function () {
     let list = new BindingList()
     list.selectionMode = ListSelectionModel.SINGLE_SELECTION
